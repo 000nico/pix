@@ -2,6 +2,7 @@ import Classes.Image.Header;
 import Classes.Image.Image;
 import Classes.Image.ImageVisualizer;
 import Classes.Image.Pixel;
+
 public class Main {
     public static void main(String[] args) {
         int width = 100;
