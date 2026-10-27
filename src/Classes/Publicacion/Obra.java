@@ -3,6 +3,9 @@ package Classes.Publicacion;
 import Classes.Image.Image;
 
 import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 public final class Obra {
@@ -12,6 +15,7 @@ public final class Obra {
     private String descripcion;
     private Image imagen;
     private LocalDateTime fechaPublicacion;
+    private Queue<Comentario> comentarios;
 
     //getters y setters
     public int getId() {return id;}
@@ -32,9 +36,11 @@ public final class Obra {
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
+    public Queue<Comentario> getComentarios() { return comentarios; }
+    public void addComentario(Comentario comentario) { comentarios.add(comentario); }
+
     //constructor
-    public Obra() {
-    }
+    public Obra() { }
     public Obra(int id, int idArtista, String titulo, String descripcion, Image imagen, Set<String> tags, LocalDateTime fechaPublicacion, boolean activo) {
         this.id = id;
         this.idArtista = idArtista;
@@ -42,5 +48,6 @@ public final class Obra {
         this.imagen = imagen;
         this.fechaPublicacion = fechaPublicacion;
         this.descripcion = descripcion;
+        this.comentarios = new LinkedList<>();
     }
 }
