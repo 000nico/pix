@@ -1,8 +1,8 @@
 package Classes.Users;
 
+import Enum.RolUsuario;
 
-
-public class Artist {
+public class Artist extends User{
 
     private String bio;
     //private List<Obra> obras;  deberia ir en la clase gestora
@@ -17,11 +17,11 @@ public class Artist {
 
     public Artist() {
     }
-    public Artist(int id, String nombre, String email, String password, String bio) {
-        //super(id, nombre, email, password);
+
+    public Artist(int id, String nombre, String email, String password, RolUsuario rol, String bio) {
+        super(id, nombre, email, password, rol);
         this.bio = bio;
     }
-
     //
 
 }

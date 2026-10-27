@@ -4,5 +4,6 @@ public class UsuarioNoEncontradoException extends Exception {
     public UsuarioNoEncontradoException(String message) {
         super(message);
     }
-    public UsuarioNoEncontradoException() { super("Usuario No Encontrado"); }
+    public UsuarioNoEncontradoException() { super("Usuario No Encontrado");}
+
 }

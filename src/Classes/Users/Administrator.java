@@ -1,6 +1,7 @@
 package Classes.Users;
 
-public class Administrator {
+import Enum.RolUsuario;
+public class Administrator extends User{
 
     private int nivelAcceso;
 
@@ -14,11 +15,10 @@ public class Administrator {
 
     public Administrator() {
     }
-    public Administrator(int id, String nombre, String email, String password, int nivelAcceso) {
-        //super(id, nombre, email, password);
-        this.nivelAcceso = nivelAcceso;
-    }
 
+    public Administrator(int id, String nombre, String email, String password, RolUsuario rol) {
+        super(id, nombre, email, password, rol);
+    }
     //
 
 }
