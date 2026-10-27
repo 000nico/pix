@@ -13,9 +13,9 @@ public class Main {
         // Armamos un degradado: rojo crece hacia la derecha, verde hacia abajo
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Distancias a cada centro (teorema de Pitágoras)
+                // DistanctCara   = Math.sqrt(Math.pow(x - 50,ias a cada centro (teorema de Pitágoras)
                 double distCara   = Math.sqrt(Math.pow(x - 50, 2) + Math.pow(y - 50, 2));
-                double distOjoIzq = Math.sqrt(Math.pow(x - 35, 2) + Math.pow(y - 38, 2));
+                double ditCara   = Math.sqrt(Math.pow(x - 50,stOjoIzq = Math.sqrt(Math.pow(x - 35, 2) + Math.pow(y - 38, 2));
                 double distOjoDer = Math.sqrt(Math.pow(x - 65, 2) + Math.pow(y - 38, 2));
                 double distSonrisa = Math.sqrt(Math.pow(x - 50, 2) + Math.pow(y - 55, 2));
 
