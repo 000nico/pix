@@ -1,4 +1,4 @@
-package Classes;
+package Classes.Image;
 
 public class Pixel {
     private int r, g, b;

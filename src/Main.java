@@ -1,4 +1,6 @@
-import Classes.*;
+import Classes.Image.Header;
+import Classes.Image.Image;
+import Classes.Image.ImageVisualizer;
 
 public class Main {
     public static void main(String[] args) {

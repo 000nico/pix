@@ -1,4 +1,4 @@
-package Classes;
+package Classes.Image;
 import java.io.*;
 
 public class ImageHandler {

@@ -1,4 +1,4 @@
-package Classes;
+package Classes.Image;
 
 import java.time.LocalDateTime;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package Classes;
+package Classes.Image;
 
 import java.util.ArrayList;
 import java.util.List;

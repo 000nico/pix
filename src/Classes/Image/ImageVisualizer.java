@@ -1,4 +1,4 @@
-package Classes;
+package Classes.Image;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
