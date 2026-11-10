@@ -10,13 +10,12 @@ public class Main {
         Header header = new Header(width, height);
         Image image = new Image(header);
 
-        // Armamos un degradado: rojo crece hacia la derecha, verde hacia abajo
+        // Dibujamos una carita feliz: para cada píxel calculamos la distancia a cada centro (Pitágoras)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // DistanctCara   = Math.sqrt(Math.pow(x - 50,ias a cada centro (teorema de Pitágoras)
-                double distCara   = Math.sqrt(Math.pow(x - 50, 2) + Math.pow(y - 50, 2));
-                double ditCara   = Math.sqrt(Math.pow(x - 50,stOjoIzq = Math.sqrt(Math.pow(x - 35, 2) + Math.pow(y - 38, 2));
-                double distOjoDer = Math.sqrt(Math.pow(x - 65, 2) + Math.pow(y - 38, 2));
+                double distCara    = Math.sqrt(Math.pow(x - 50, 2) + Math.pow(y - 50, 2));
+                double distOjoIzq  = Math.sqrt(Math.pow(x - 35, 2) + Math.pow(y - 38, 2));
+                double distOjoDer  = Math.sqrt(Math.pow(x - 65, 2) + Math.pow(y - 38, 2));
                 double distSonrisa = Math.sqrt(Math.pow(x - 50, 2) + Math.pow(y - 55, 2));
 
                 Pixel pixel;
