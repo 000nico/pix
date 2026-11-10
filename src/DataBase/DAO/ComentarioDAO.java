@@ -12,115 +12,131 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * DAO de comentarios: único que habla con la tabla "comentarios".
- */
+// dao de comentarios: el unico que habla con la tabla "comentarios"
 public class ComentarioDAO implements DAO<Comentario> {
 
-    // Guarda un comentario nuevo y le asigna el id que generó la base.
+    // guarda un comentario nuevo y le asigna el id que genero la base
     @Override
     public void insertar(Comentario comentario) throws SQLException {
         if (comentario.getFecha() == null) {
             comentario.setFecha(LocalDateTime.now());
         }
-        String sql = "INSERT INTO comentarios (id_obra, id_usuario, contenido, fecha, activo) "
-                + "VALUES (?, ?, ?, ?, TRUE)";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO comentarios (id_obra, id_usuario, contenido, fecha, activo) VALUES (?, ?, ?, ?, TRUE)";
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, comentario.getIdObra());
             ps.setInt(2, comentario.getId_usuario());
             ps.setString(3, comentario.getContent());
             ps.setTimestamp(4, Timestamp.valueOf(comentario.getFecha()));
             ps.executeUpdate();
 
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    comentario.setId(keys.getInt(1));
-                }
+            ResultSet keys = ps.getGeneratedKeys();
+            if (keys.next()) {
+                comentario.setId(keys.getInt(1));
             }
+            keys.close();
+            ps.close();
             comentario.setActivo(true);
+        } finally {
+            con.close();
         }
     }
 
-    // Busca un comentario activo por id.
+    // busca un comentario activo por id. si no existe devuelve null
     @Override
-    public Optional<Comentario> buscarPorId(int id) throws SQLException {
+    public Comentario buscarPorId(int id) throws SQLException {
         String sql = "SELECT * FROM comentarios WHERE id = ? AND activo = TRUE";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapear(rs));
-                }
-                return Optional.empty();
+            ResultSet rs = ps.executeQuery();
+            Comentario comentario = null;
+            if (rs.next()) {
+                comentario = mapear(rs);
             }
+            rs.close();
+            ps.close();
+            return comentario;
+        } finally {
+            con.close();
         }
     }
 
-    // Todos los comentarios activos (sirve para que el administrador los modere).
+    // todos los comentarios activos, sirve para que el administrador los modere
     @Override
     public List<Comentario> listar() throws SQLException {
         String sql = "SELECT * FROM comentarios WHERE activo = TRUE ORDER BY fecha";
-        List<Comentario> comentarios = new ArrayList<>();
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        List<Comentario> comentarios = new ArrayList<Comentario>();
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 comentarios.add(mapear(rs));
             }
+            rs.close();
+            ps.close();
+            return comentarios;
+        } finally {
+            con.close();
         }
-        return comentarios;
     }
 
-    // Comentarios de una obra, del más viejo al más nuevo.
+    // comentarios de una obra, del mas viejo al mas nuevo
     public List<Comentario> listarPorObra(int idObra) throws SQLException {
         String sql = "SELECT * FROM comentarios WHERE id_obra = ? AND activo = TRUE ORDER BY fecha";
-        List<Comentario> comentarios = new ArrayList<>();
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        List<Comentario> comentarios = new ArrayList<Comentario>();
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, idObra);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    comentarios.add(mapear(rs));
-                }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                comentarios.add(mapear(rs));
             }
+            rs.close();
+            ps.close();
+            return comentarios;
+        } finally {
+            con.close();
         }
-        return comentarios;
     }
 
-    // Solo se puede cambiar el texto del comentario.
+    // solo se puede cambiar el texto del comentario
     @Override
     public void actualizar(Comentario comentario) throws SQLException {
         String sql = "UPDATE comentarios SET contenido = ? WHERE id = ?";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, comentario.getContent());
             ps.setInt(2, comentario.getId());
             ps.executeUpdate();
+            ps.close();
+        } finally {
+            con.close();
         }
     }
 
-    // Baja lógica: el comentario se oculta pero no se borra.
+    // baja logica: el comentario se oculta pero no se borra
     @Override
     public void bajaLogica(int id) throws SQLException {
         String sql = "UPDATE comentarios SET activo = FALSE WHERE id = ?";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
             ps.executeUpdate();
+            ps.close();
+        } finally {
+            con.close();
         }
     }
 
-    // Convierte la fila actual en un objeto Comentario.
+    // convierte la fila actual en un objeto comentario
     private Comentario mapear(ResultSet rs) throws SQLException {
         Comentario c = new Comentario(rs.getInt("id_obra"), rs.getInt("id_usuario"), rs.getString("contenido"));
         c.setId(rs.getInt("id"));

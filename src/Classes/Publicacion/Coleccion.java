@@ -3,10 +3,7 @@ package Classes.Publicacion;
 import java.util.ArrayList;
 import java.util.List;
 
-
- // Colección (álbum) que arma un usuario para guardar obras.
- //Guarda los ids de las obras, no los objetos, para no cargar todas las imágenes.
-
+// coleccion (album) que arma un usuario para guardar obras. guarda los ids de las obras, no los objetos, para no cargar todas las imagenes
 public class Coleccion {
     private int id;
     private int idUsuario;
@@ -15,13 +12,13 @@ public class Coleccion {
     private boolean activo;
     private List<Integer> idsObras;
 
-    //contructores
+    //constructores
     public Coleccion() {
-        this.idsObras = new ArrayList<>();
+        this.idsObras = new ArrayList<Integer>();
         this.activo = true;
     }
 
-    // Para crear una colección nueva (el id lo genera la base)
+    // para crear una coleccion nueva, el id lo genera la base
     public Coleccion(int idUsuario, String nombre, String descripcion) {
         this();
         this.idUsuario = idUsuario;
@@ -29,7 +26,7 @@ public class Coleccion {
         this.descripcion = descripcion;
     }
 
-    // Para armar una colección leída de la base
+    // para armar una coleccion leida de la base
     public Coleccion(int id, int idUsuario, String nombre, String descripcion, boolean activo) {
         this(idUsuario, nombre, descripcion);
         this.id = id;
@@ -37,7 +34,6 @@ public class Coleccion {
     }
 
     //getters y setters
-
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 

@@ -6,28 +6,33 @@ import Exceptions.UsuarioNoEncontradoException;
 import java.util.HashMap;
 import java.util.Map;
 
+// gestora de usuarios: guarda a cada usuario junto con la cantidad de obras que tiene. la usa el usuarioservice para las estadisticas del administrador
 public class GestoraUsuarios {
 
-     //id_usuario - cant_obreas
-    private Map<User, Integer> usuarios= new HashMap<>();
+    // usuario -> cantidad de obras
+    private Map<User, Integer> usuarios = new HashMap<User, Integer>();
 
-    public void agregarUsuario(User user, int cantObras){
+    // agrega un usuario con su cantidad de obras
+    public void agregarUsuario(User user, int cantObras) {
         usuarios.put(user, cantObras);
     }
 
-    public void eliminarUsuario(User user){
+    // saca un usuario del map
+    public void eliminarUsuario(User user) {
         usuarios.remove(user);
     }
 
-    public Integer obtenerUsuario(int idUsuario) throws UsuarioNoEncontradoException {
-        for (Map.Entry<User, Integer> e : usuarios.entrySet()) {
-            User user = e.getKey();
-
+    // busca un usuario por id y devuelve su cantidad de obras
+    public int cantidadObras(int idUsuario) throws UsuarioNoEncontradoException {
+        for (User user : usuarios.keySet()) {
             if (user.getId() == idUsuario) {
-                return user.getId();
+                return usuarios.get(user);
             }
         }
+        throw new UsuarioNoEncontradoException("no existe el usuario " + idUsuario);
+    }
 
-        throw new UsuarioNoEncontradoException();
+    public Map<User, Integer> getUsuarios() {
+        return usuarios;
     }
 }

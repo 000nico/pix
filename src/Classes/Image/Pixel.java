@@ -1,14 +1,17 @@
 package Classes.Image;
 
+// un pixel de la imagen, guarda los 3 colores basicos
 public class Pixel {
     private int r, g, b;
 
+    //constructores
     public Pixel(int r, int g, int b) {
         this.r = r;
         this.g = g;
         this.b = b;
     }
 
+    //getters y setters
     public int getR() { return r; }
     public void setR(int r) { this.r = r; }
 

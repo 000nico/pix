@@ -15,26 +15,23 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-
+// dao de usuarios: el unico que habla con la tabla "usuarios"
 public class UsuarioDAO implements DAO<User> {
 
-    // Guarda un usuario nuevo y le asigna el id que generó la base.
+    // guarda un usuario nuevo y le asigna el id que genero la base
     @Override
     public void insertar(User user) throws SQLException {
-        String sql = "INSERT INTO usuarios (nombre, email, password, rol, bio, nivel_acceso, activo, fecha_registro) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
+        String sql = "INSERT INTO usuarios (nombre, email, password, rol, bio, nivel_acceso, activo, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, user.getNombre());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPassword());
             ps.setString(4, user.getRol().name());
 
-            // bio es solo de artistas y nivel_acceso solo de administradores
+            // la bio es solo de artistas y el nivel de acceso solo de administradores
             if (user instanceof Artist) {
                 ps.setString(5, ((Artist) user).getBio());
             } else {
@@ -48,74 +45,87 @@ public class UsuarioDAO implements DAO<User> {
 
             ps.setBoolean(7, user.isActivo());
             ps.setDate(8, Date.valueOf(user.getFechaRegistro()));
-
             ps.executeUpdate();
 
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    user.setId(keys.getInt(1));
-                }
+            ResultSet keys = ps.getGeneratedKeys();
+            if (keys.next()) {
+                user.setId(keys.getInt(1));
             }
+            keys.close();
+            ps.close();
+        } finally {
+            con.close();
         }
     }
 
-    // Busca un usuario activo por id. Si no existe, devuelve Optional vacío.
+    // busca un usuario activo por id. si no existe devuelve null
     @Override
-    public Optional<User> buscarPorId(int id) throws SQLException {
+    public User buscarPorId(int id) throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE id = ? AND activo = TRUE";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapear(rs));
-                }
-                return Optional.empty();
+            ResultSet rs = ps.executeQuery();
+            User user = null;
+            if (rs.next()) {
+                user = mapear(rs);
             }
+            rs.close();
+            ps.close();
+            return user;
+        } finally {
+            con.close();
         }
     }
 
-    // Sirve para el login: busca un usuario activo por su email.
-    public Optional<User> buscarPorEmail(String email) throws SQLException {
+    // sirve para el login: busca un usuario activo por su email
+    public User buscarPorEmail(String email) throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE email = ? AND activo = TRUE";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapear(rs));
-                }
-                return Optional.empty();
+            ResultSet rs = ps.executeQuery();
+            User user = null;
+            if (rs.next()) {
+                user = mapear(rs);
             }
+            rs.close();
+            ps.close();
+            return user;
+        } finally {
+            con.close();
         }
     }
 
-    // Lista solo los usuarios activos (los dados de baja no aparecen).
+    // lista solo los usuarios activos, los dados de baja no aparecen
     @Override
     public List<User> listar() throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE activo = TRUE";
-        List<User> usuarios = new ArrayList<>();
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        List<User> usuarios = new ArrayList<User>();
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 usuarios.add(mapear(rs));
             }
+            rs.close();
+            ps.close();
+            return usuarios;
+        } finally {
+            con.close();
         }
-        return usuarios;
     }
 
-    // Modifica los datos de un usuario (el rol y la fecha de registro no se tocan).
+    // modifica los datos de un usuario, el rol y la fecha de registro no se tocan
     @Override
     public void actualizar(User user) throws SQLException {
         String sql = "UPDATE usuarios SET nombre = ?, email = ?, password = ?, bio = ?, nivel_acceso = ? WHERE id = ?";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, user.getNombre());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPassword());
@@ -133,32 +143,39 @@ public class UsuarioDAO implements DAO<User> {
 
             ps.setInt(6, user.getId());
             ps.executeUpdate();
+            ps.close();
+        } finally {
+            con.close();
         }
     }
 
-    // Baja lógica: el usuario no se borra, solo se marca como inactivo.
+    // baja logica: el usuario no se borra, solo se marca como inactivo
     @Override
     public void bajaLogica(int id) throws SQLException {
         cambiarActivo(id, false);
     }
 
-    // Deshace la baja lógica (lo usaría un administrador).
+    // deshace la baja logica, lo usaria un administrador
     public void reactivar(int id) throws SQLException {
         cambiarActivo(id, true);
     }
 
+    // cambia el campo activo de un usuario
     private void cambiarActivo(int id, boolean activo) throws SQLException {
         String sql = "UPDATE usuarios SET activo = ? WHERE id = ?";
-
-        try (Connection con = ConexionDB.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = ConexionDB.getConexion();
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
             ps.setBoolean(1, activo);
             ps.setInt(2, id);
             ps.executeUpdate();
+            ps.close();
+        } finally {
+            con.close();
         }
     }
 
-    // Convierte una fila de la base en un objeto: Artist o Administrator según el rol.
+    // convierte una fila de la base en un artist o un administrator segun el rol
     private User mapear(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         String nombre = rs.getString("nombre");
@@ -175,7 +192,7 @@ public class UsuarioDAO implements DAO<User> {
             user = admin;
         }
 
-        // Se pisan los valores que puso el constructor con los reales de la base
+        // se pisan los valores del constructor con los reales de la base
         user.setActivo(rs.getBoolean("activo"));
         user.setFechaRegistro(rs.getDate("fecha_registro").toLocalDate());
         return user;

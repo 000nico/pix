@@ -8,24 +8,21 @@ import Classes.Users.Administrator;
 import Classes.Users.Artist;
 import Classes.Users.User;
 import DataBase.DAO.UsuarioDAO;
-import Enum.RolUsuario;
-import Exceptions.ObraNoEncontradaException;
-import Exceptions.UsuarioNoEncontradoException;
-import Exceptions.UsuarioSinPermisosException;
 import DataBase.Service.ColeccionService;
 import DataBase.Service.ComentarioService;
 import DataBase.Service.PublicacionService;
 import DataBase.Service.UsuarioService;
+import Enum.RolUsuario;
+import Exceptions.ObraNoEncontradaException;
+import Exceptions.UsuarioNoEncontradoException;
+import Exceptions.UsuarioSinPermisosException;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Prueba rápida de toda la capa de datos y servicios contra la base MySQL.
- * Cada línea imprime [OK] o [FALLO]. Se puede correr varias veces: los emails llevan un sufijo único.
- */
+// prueba de toda la capa de datos y servicios contra la base mysql. cada linea imprime [ok] o [fallo]. se puede correr varias veces porque los emails llevan un sufijo unico
 public class PruebaMain {
 
     public static void main(String[] args) throws Exception {
@@ -36,104 +33,100 @@ public class PruebaMain {
         ComentarioService comentarios = new ComentarioService();
         ColeccionService colecciones = new ColeccionService();
 
-        System.out.println("=== USUARIOS ===");
-        // El primer administrador se crea directo con el DAO (el servicio exige ser admin para crear admins)
-        Administrator admin = new Administrator(0, "admin", "admin" + sufijo + "@pix.com", "1234",
-                RolUsuario.ADMINISTRADOR);
+        System.out.println("=== usuarios ===");
+        // el primer administrador se crea directo con el dao porque el servicio exige ser admin para crear admins
+        Administrator admin = new Administrator(0, "admin", "admin" + sufijo + "@pix.com", "1234", RolUsuario.ADMINISTRADOR);
         admin.setNivelAcceso(2);
         new UsuarioDAO().insertar(admin);
-        resultado("Administrador guardado con id " + admin.getId(), admin.getId() > 0);
+        resultado("administrador guardado con id " + admin.getId(), admin.getId() > 0);
 
         Artist ian = usuarios.registrarArtista("ian", "ian" + sufijo + "@mail.com", "1234", "pixel artist");
         Artist otro = usuarios.registrarArtista("otro", "otro" + sufijo + "@mail.com", "1234", "otra bio");
-        resultado("Artistas registrados con id " + ian.getId() + " y " + otro.getId(),
-                ian.getId() > 0 && otro.getId() > 0);
+        resultado("artistas registrados con id " + ian.getId() + " y " + otro.getId(), ian.getId() > 0 && otro.getId() > 0);
 
         User logueado = usuarios.login(ian.getEmail(), "1234");
-        resultado("Login correcto, rol: " + logueado.getRol(), logueado.getRol() == RolUsuario.ARTISTA);
+        resultado("login correcto, rol: " + logueado.getRol(), logueado.getRol() == RolUsuario.ARTISTA);
 
         try {
-            usuarios.login(ian.getEmail(), "contraseña-mala");
-            resultado("Login con contraseña mala debería fallar", false);
+            usuarios.login(ian.getEmail(), "mala");
+            resultado("login con password mala deberia fallar", false);
         } catch (UsuarioNoEncontradoException e) {
-            resultado("Login con contraseña mala rechazado: " + e.getMessage(), true);
+            resultado("login con password mala rechazado", true);
         }
 
         try {
             usuarios.registrarArtista("copia", ian.getEmail(), "1234", "");
-            resultado("Email repetido debería rechazarse", false);
+            resultado("email repetido deberia rechazarse", false);
         } catch (IllegalArgumentException e) {
-            resultado("Email repetido rechazado: " + e.getMessage(), true);
+            resultado("email repetido rechazado", true);
         }
 
-        System.out.println("\n=== OBRAS ===");
-        Set<String> tags = new HashSet<>(Arrays.asList("#Retro", "paisaje", "retro"));
+        System.out.println("\n=== obras ===");
+        Set<String> tags = new HashSet<String>(Arrays.asList("#Retro", "paisaje", "retro"));
         Publicacion pub = publicaciones.publicar(ian, "Atardecer", "mi primera obra", crearImagen(), tags);
-        resultado("Obra publicada con id " + pub.getId(), pub.getId() > 0);
-        resultado("Tags normalizados (esperado 2): " + pub.getTags(), pub.getTags().size() == 2);
+        resultado("obra publicada con id " + pub.getId(), pub.getId() > 0);
+        resultado("tags normalizados, esperado 2: " + pub.getTags(), pub.getTags().size() == 2);
 
         Publicacion leida = publicaciones.buscarPorId(pub.getId());
         Header h = leida.getObra().getImagen().getHeader();
-        resultado("Obra leída de la base: '" + leida.getObra().getTitulo() + "', imagen " + h.getWidth() + "x"
-                + h.getHeight(), h.getWidth() == 20 && h.getHeight() == 20);
+        resultado("obra leida de la base: " + leida.getObra().getTitulo() + ", imagen " + h.getWidth() + "x" + h.getHeight(), h.getWidth() == 20 && h.getHeight() == 20);
 
-        resultado("Feed tiene al menos 1 obra", !publicaciones.verFeed().isEmpty());
-        resultado("Búsqueda por tag 'RETRO' encuentra la obra", !publicaciones.buscarPorTag("RETRO").isEmpty());
+        resultado("el feed tiene al menos 1 obra", !publicaciones.verFeed().isEmpty());
+        resultado("busqueda por tag retro encuentra la obra", !publicaciones.buscarPorTag("RETRO").isEmpty());
 
         try {
-            publicaciones.publicar(admin, "No debería", "", crearImagen(), tags);
-            resultado("Un administrador no debería poder publicar", false);
+            publicaciones.publicar(admin, "no deberia", "", crearImagen(), tags);
+            resultado("un administrador no deberia poder publicar", false);
         } catch (UsuarioSinPermisosException e) {
-            resultado("Administrador no puede publicar: " + e.getMessage(), true);
+            resultado("administrador no puede publicar", true);
         }
 
-        System.out.println("\n=== COMENTARIOS ===");
-        Comentario c = comentarios.comentar(otro, pub.getId(), "Qué lindo!");
-        resultado("Comentario guardado con id " + c.getId(), c.getId() > 0);
-        resultado("La obra tiene 1 comentario",
-                comentarios.listarPorPublicacion(pub.getId()).size() == 1);
+        System.out.println("\n=== comentarios ===");
+        Comentario c = comentarios.comentar(otro, pub.getId(), "que lindo!");
+        resultado("comentario guardado con id " + c.getId(), c.getId() > 0);
+        resultado("la obra tiene 1 comentario", comentarios.listarPorPublicacion(pub.getId()).size() == 1);
 
         try {
             comentarios.editar(ian, c.getId(), "intento editar el de otro");
-            resultado("Editar comentario ajeno debería rechazarse", false);
+            resultado("editar comentario ajeno deberia rechazarse", false);
         } catch (UsuarioSinPermisosException e) {
-            resultado("Editar comentario ajeno rechazado: " + e.getMessage(), true);
+            resultado("editar comentario ajeno rechazado", true);
         }
 
-        System.out.println("\n=== PERMISOS SOBRE OBRAS ===");
+        System.out.println("\n=== permisos sobre obras ===");
         try {
             publicaciones.darDeBaja(otro, pub.getId());
-            resultado("Otro artista no debería poder dar de baja la obra", false);
+            resultado("otro artista no deberia poder dar de baja la obra", false);
         } catch (UsuarioSinPermisosException e) {
-            resultado("Otro artista no puede dar de baja la obra: " + e.getMessage(), true);
+            resultado("otro artista no puede dar de baja la obra", true);
         }
 
-        System.out.println("\n=== COLECCIONES ===");
+        System.out.println("\n=== colecciones ===");
         Coleccion col = colecciones.crear(ian, "Favoritas", "mis obras preferidas");
-        resultado("Colección creada con id " + col.getId(), col.getId() > 0);
+        resultado("coleccion creada con id " + col.getId(), col.getId() > 0);
         colecciones.agregarObra(ian, col.getId(), pub.getId());
-        resultado("La colección tiene 1 obra", colecciones.buscarPorId(col.getId()).getIdsObras().size() == 1);
+        resultado("la coleccion tiene 1 obra", colecciones.buscarPorId(col.getId()).getIdsObras().size() == 1);
 
-        System.out.println("\n=== ESTADÍSTICAS (MAP) ===");
+        System.out.println("\n=== estadisticas (map con la gestora) ===");
         Map<User, Integer> mapa = usuarios.contarObrasPorUsuario(admin);
-        for (Map.Entry<User, Integer> e : mapa.entrySet()) {
-            System.out.println("  " + e.getKey().getNombre() + " -> " + e.getValue() + " obras");
+        for (Map.Entry<User, Integer> entrada : mapa.entrySet()) {
+            System.out.println("  " + entrada.getKey().getNombre() + " -> " + entrada.getValue() + " obras");
         }
-        resultado("El Map no está vacío", !mapa.isEmpty());
+        resultado("el map no esta vacio", !mapa.isEmpty());
 
-        System.out.println("\n=== BAJA LÓGICA ===");
+        System.out.println("\n=== baja logica ===");
         publicaciones.darDeBaja(admin, pub.getId());
         try {
             publicaciones.buscarPorId(pub.getId());
-            resultado("La obra dada de baja no debería encontrarse", false);
+            resultado("la obra dada de baja no deberia encontrarse", false);
         } catch (ObraNoEncontradaException e) {
-            resultado("Obra dada de baja ya no aparece: " + e.getMessage(), true);
+            resultado("obra dada de baja ya no aparece", true);
         }
 
-        System.out.println("\nListo. Mirá las tablas en Workbench: la obra sigue en la base con activo = 0.");
+        System.out.println("\nlisto. mira las tablas en workbench: la obra sigue en la base con activo = 0.");
     }
 
-    // Imagen de prueba de 20x20 con un degradado
+    // imagen de prueba de 20x20 con un degradado
     private static Image crearImagen() {
         Image imagen = new Image(new Header(20, 20));
         for (int y = 0; y < 20; y++) {
@@ -144,7 +137,8 @@ public class PruebaMain {
         return imagen;
     }
 
+    // imprime el mensaje con [ok] o [fallo] segun el resultado
     private static void resultado(String mensaje, boolean ok) {
-        System.out.println((ok ? "  [OK]    " : "  [FALLO] ") + mensaje);
+        System.out.println((ok ? "  [ok]    " : "  [fallo] ") + mensaje);
     }
 }

@@ -12,16 +12,13 @@ import Exceptions.UsuarioSinPermisosException;
 import java.sql.SQLException;
 import java.util.List;
 
-
-//Servicio de colecciones (álbumes). Cada usuario maneja las suyas;
- // un administrador también puede darlas de baja.
-
+// servicio de colecciones (albumes). cada usuario maneja las suyas, un administrador tambien puede darlas de baja
 public class ColeccionService {
 
-    private final ColeccionDAO coleccionDAO = new ColeccionDAO();
-    private final PublicacionDAO publicacionDAO = new PublicacionDAO();
+    private ColeccionDAO coleccionDAO = new ColeccionDAO();
+    private PublicacionDAO publicacionDAO = new PublicacionDAO();
 
-    // Crea una colección vacía para el usuario.
+    // crea una coleccion vacia para el usuario
     public Coleccion crear(User duenio, String nombre, String descripcion) throws SQLException {
         validarNombre(nombre);
 
@@ -30,20 +27,30 @@ public class ColeccionService {
         return coleccion;
     }
 
+    // busca una coleccion por id
     public Coleccion buscarPorId(int idColeccion) throws SQLException {
-        return coleccionDAO.buscarPorId(idColeccion)
-                // orElseThrow es un metodo del optional
-                .orElseThrow(() -> new IllegalArgumentException("No existe la colección " + idColeccion));
+        Coleccion coleccion = coleccionDAO.buscarPorId(idColeccion);
+        if (coleccion == null) {
+            throw new IllegalArgumentException("no existe la coleccion " + idColeccion);
+        }
+        return coleccion;
     }
 
-    // Las colecciones del usuario.
+    // las colecciones del usuario
     public List<Coleccion> listarPorUsuario(int idUsuario) throws SQLException {
         return coleccionDAO.listarPorUsuario(idUsuario);
     }
 
-    // Cambia nombre y descripción. Solo el dueño.
-    public void editar(User quienPide, int idColeccion, String nombre, String descripcion)
-            throws UsuarioSinPermisosException, SQLException {
+    // todas las colecciones activas, las ve un administrador
+    public List<Coleccion> listarTodas(User quienPide) throws UsuarioSinPermisosException, SQLException {
+        if (quienPide.getRol() != RolUsuario.ADMINISTRADOR) {
+            throw new UsuarioSinPermisosException("esta accion es solo para administradores");
+        }
+        return coleccionDAO.listar();
+    }
+
+    // cambia nombre y descripcion. solo el duenio
+    public void editar(User quienPide, int idColeccion, String nombre, String descripcion) throws UsuarioSinPermisosException, SQLException {
         validarNombre(nombre);
         Coleccion coleccion = buscarPorId(idColeccion);
         exigirDuenio(quienPide, coleccion);
@@ -53,59 +60,61 @@ public class ColeccionService {
         coleccionDAO.actualizar(coleccion);
     }
 
-    // Baja lógica: el dueño o un administrador.
+    // baja logica: el duenio o un administrador
     public void darDeBaja(User quienPide, int idColeccion) throws UsuarioSinPermisosException, SQLException {
         Coleccion coleccion = buscarPorId(idColeccion);
 
         boolean esAdmin = quienPide.getRol() == RolUsuario.ADMINISTRADOR;
         if (coleccion.getIdUsuario() != quienPide.getId() && !esAdmin) {
-            throw new UsuarioSinPermisosException("Solo el dueño o un administrador pueden borrar la colección");
+            throw new UsuarioSinPermisosException("solo el duenio o un administrador pueden borrar la coleccion");
         }
         coleccionDAO.bajaLogica(idColeccion);
     }
 
-    // Suma una obra a la colección. Solo el dueño.
-    public void agregarObra(User quienPide, int idColeccion, int idPublicacion)
-            throws UsuarioSinPermisosException, ObraNoEncontradaException, SQLException {
+    // suma una obra a la coleccion. solo el duenio
+    public void agregarObra(User quienPide, int idColeccion, int idPublicacion) throws UsuarioSinPermisosException, ObraNoEncontradaException, SQLException {
         Coleccion coleccion = buscarPorId(idColeccion);
         exigirDuenio(quienPide, coleccion);
         int idObra = obtenerPublicacion(idPublicacion).getObra().getId();
 
         if (coleccion.getIdsObras().contains(idObra)) {
-            throw new IllegalArgumentException("La obra ya está en la colección");
+            throw new IllegalArgumentException("la obra ya esta en la coleccion");
         }
         coleccionDAO.agregarObra(idColeccion, idObra);
     }
 
-    // Saca una obra de la colección (la obra no se borra). Solo el dueño.
-    public void quitarObra(User quienPide, int idColeccion, int idPublicacion)
-            throws UsuarioSinPermisosException, ObraNoEncontradaException, SQLException {
+    // saca una obra de la coleccion, la obra no se borra. solo el duenio
+    public void quitarObra(User quienPide, int idColeccion, int idPublicacion) throws UsuarioSinPermisosException, ObraNoEncontradaException, SQLException {
         Coleccion coleccion = buscarPorId(idColeccion);
         exigirDuenio(quienPide, coleccion);
         int idObra = obtenerPublicacion(idPublicacion).getObra().getId();
 
         if (!coleccion.getIdsObras().contains(idObra)) {
-            throw new IllegalArgumentException("La obra no está en la colección");
+            throw new IllegalArgumentException("la obra no esta en la coleccion");
         }
         coleccionDAO.quitarObra(idColeccion, idObra);
     }
 
-    //  auxiliares
+    // auxiliares
 
     private Publicacion obtenerPublicacion(int idPublicacion) throws ObraNoEncontradaException, SQLException {
-        return publicacionDAO.buscarPorId(idPublicacion)
-                .orElseThrow(() -> new ObraNoEncontradaException("No existe la obra " + idPublicacion));
+        Publicacion publicacion = publicacionDAO.buscarPorId(idPublicacion);
+        if (publicacion == null) {
+            throw new ObraNoEncontradaException("no existe la obra " + idPublicacion);
+        }
+        return publicacion;
     }
 
+    // revisa que quien pide sea el duenio de la coleccion
     private void exigirDuenio(User quienPide, Coleccion coleccion) throws UsuarioSinPermisosException {
         if (coleccion.getIdUsuario() != quienPide.getId()) {
-            throw new UsuarioSinPermisosException("Solo el dueño de la colección puede hacer esto");
+            throw new UsuarioSinPermisosException("solo el duenio de la coleccion puede hacer esto");
         }
     }
 
     private void validarNombre(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
-            throw new IllegalArgumentException("El nombre de la colección es obligatorio");
+            throw new IllegalArgumentException("el nombre de la coleccion es obligatorio");
         }
     }
 }
