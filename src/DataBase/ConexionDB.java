@@ -6,9 +6,9 @@ import java.sql.SQLException;
 
 // conexion con la base mysql "pix". todos los dao la usan
 public class ConexionDB {
-    private static final String URL = "jdbc:mysql://localhost:3306/pix";
-    private static final String USER = "root";
-    private static final String PASSWORD = "1234";
+    private static final String URL = "jdbc:mysql://172.16.1.64:3306/pix";
+    private static final String USER = "bdd1";
+    private static final String PASSWORD = "bdd1";
 
     // abre una conexion nueva cada vez que se la piden
     public static Connection getConexion() throws SQLException {
